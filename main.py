@@ -8,6 +8,9 @@ app = FastAPI()
 class TaskCreate(BaseModel):
     title: str = ""
 
+class TaskUpdate(BaseModel):
+    title: str | None = None
+    done: bool | None = None
 
 tasks = [
     {
@@ -80,3 +83,47 @@ def create_task(task_data: TaskCreate):
     tasks.append(new_task)
 
     return new_task
+
+@app.put("/tasks/{task_id}")
+def update_task(task_id: int, task_data: TaskUpdate):
+    for task in tasks:
+        if task["id"] == task_id:
+
+            update_data = task_data.model_dump(exclude_unset=True)
+
+            if not update_data:
+                return JSONResponse(
+                    status_code=400,
+                    content={"error": "Request body cannot be empty"}
+                )
+
+            if "title" in update_data:
+                if not update_data["title"].strip():
+                    return JSONResponse(
+                        status_code=400,
+                        content={"error": "Title cannot be empty"}
+                    )
+
+                task["title"] = update_data["title"].strip()
+
+            if "done" in update_data:
+                task["done"] = update_data["done"]
+
+            return task
+
+    return JSONResponse(
+        status_code=404,
+        content={"error": f"Task {task_id} not found"}
+    )
+
+@app.delete("/tasks/{task_id}", status_code=204)
+def delete_task(task_id: int):
+    for index, task in enumerate(tasks):
+        if task["id"] == task_id:
+            tasks.pop(index)
+            return
+
+    return JSONResponse(
+        status_code=404,
+        content={"error": f"Task {task_id} not found"}
+    )
