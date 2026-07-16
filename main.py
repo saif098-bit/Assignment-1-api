@@ -31,7 +31,8 @@ tasks = [
 ]
 
 
-@app.get("/")
+@app.get("/", description="Returns basic information about the Task API."
+)
 def root():
     return {
         "name": "Task API",
@@ -40,17 +41,17 @@ def root():
     }
 
 
-@app.get("/health")
+@app.get("/health", description="Checks whether the API server is running.")
 def health():
     return {"status": "ok"}
 
 
-@app.get("/tasks")
+@app.get("/tasks", description="Returns a list of all tasks.")
 def get_tasks():
     return tasks
 
 
-@app.get("/tasks/{task_id}")
+@app.get("/tasks/{task_id}", description="Returns a specific task by its ID.")
 def get_task(task_id: int):
     for task in tasks:
         if task["id"] == task_id:
@@ -62,7 +63,7 @@ def get_task(task_id: int):
     )
 
 
-@app.post("/tasks", status_code=201)
+@app.post("/tasks", status_code=201, description="Creates a new task.")
 def create_task(task_data: TaskCreate):
     title = task_data.title.strip()
 
@@ -85,7 +86,7 @@ def create_task(task_data: TaskCreate):
     return new_task
 
 @app.put("/tasks/{task_id}")
-def update_task(task_id: int, task_data: TaskUpdate):
+def update_task(task_id: int, task_data: TaskUpdate, description="Updates the title and/or completion status of a task."):
     for task in tasks:
         if task["id"] == task_id:
 
@@ -116,7 +117,7 @@ def update_task(task_id: int, task_data: TaskUpdate):
         content={"error": f"Task {task_id} not found"}
     )
 
-@app.delete("/tasks/{task_id}", status_code=204)
+@app.delete("/tasks/{task_id}", status_code=204,  description="Deletes a task permanently.")
 def delete_task(task_id: int):
     for index, task in enumerate(tasks):
         if task["id"] == task_id:
