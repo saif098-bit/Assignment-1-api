@@ -90,46 +90,61 @@ def create_task(task_data: TaskCreate):
 
     return {"id": new_id, "title": title, "done": False}
 
-@app.put("/tasks/{task_id}")
-def update_task(task_id: int, task_data: TaskUpdate, description="Updates the title and/or completion status of a task."):
-    for task in tasks:
-        if task["id"] == task_id:
+@app.put("/tasks/{task_id}", description="Updates the title and/or completion status of a task.")
+def update_task(task_id: int, task_data: TaskUpdate):
+    conn = get_connection()
+    row = conn.execute("SELECT * FROM tasks WHERE id = ?", (task_id,)).fetchone()
 
-            update_data = task_data.model_dump(exclude_unset=True)
+    if row is None:
+        conn.close()
+        return JSONResponse(
+            status_code=404,
+            content={"error": f"Task {task_id} not found"}
+        )
 
-            if not update_data:
-                return JSONResponse(
-                    status_code=400,
-                    content={"error": "Request body cannot be empty"}
-                )
+    update_data = task_data.model_dump(exclude_unset=True)
 
-            if "title" in update_data:
-                if not update_data["title"].strip():
-                    return JSONResponse(
-                        status_code=400,
-                        content={"error": "Title cannot be empty"}
-                    )
+    if not update_data:
+        conn.close()
+        return JSONResponse(
+            status_code=400,
+            content={"error": "Request body cannot be empty"}
+        )
 
-                task["title"] = update_data["title"].strip()
+    new_title = row["title"]
+    if "title" in update_data:
+        if not update_data["title"].strip():
+            conn.close()
+            return JSONResponse(
+                status_code=400,
+                content={"error": "Title cannot be empty"}
+            )
+        new_title = update_data["title"].strip()
 
-            if "done" in update_data:
-                task["done"] = update_data["done"]
+    new_done = update_data.get("done", bool(row["done"]))
 
-            return task
-
-    return JSONResponse(
-        status_code=404,
-        content={"error": f"Task {task_id} not found"}
+    conn.execute(
+        "UPDATE tasks SET title = ?, done = ? WHERE id = ?",
+        (new_title, int(new_done), task_id)
     )
+    conn.commit()
+    conn.close()
 
-@app.delete("/tasks/{task_id}", status_code=204,  description="Deletes a task permanently.")
+    return {"id": task_id, "title": new_title, "done": new_done}
+
+
+@app.delete("/tasks/{task_id}", status_code=204, description="Deletes a task permanently.")
 def delete_task(task_id: int):
-    for index, task in enumerate(tasks):
-        if task["id"] == task_id:
-            tasks.pop(index)
-            return
+    conn = get_connection()
+    row = conn.execute("SELECT * FROM tasks WHERE id = ?", (task_id,)).fetchone()
 
-    return JSONResponse(
-        status_code=404,
-        content={"error": f"Task {task_id} not found"}
-    )
+    if row is None:
+        conn.close()
+        return JSONResponse(
+            status_code=404,
+            content={"error": f"Task {task_id} not found"}
+        )
+
+    conn.execute("DELETE FROM tasks WHERE id = ?", (task_id,))
+    conn.commit()
+    conn.close()
