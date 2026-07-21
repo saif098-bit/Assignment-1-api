@@ -23,3 +23,9 @@ Clone the repository:
 ```bash
 git clone https://github.com/saif098-bit/Assignment-1-api
 cd hello-server
+
+## Swagger UI
+
+The API provides interactive documentation using Swagger UI.
+
+![Swagger UI](swagger-screenshot.png)

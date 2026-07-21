@@ -1,9 +1,10 @@
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
+from db import get_connection, init_db
 
 app = FastAPI()
-
+init_db()
 
 class TaskCreate(BaseModel):
     title: str = ""
@@ -29,7 +30,6 @@ tasks = [
         "done": True
     }
 ]
-
 
 @app.get("/", description="Returns basic information about the Task API."
 )
