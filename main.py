@@ -79,17 +79,16 @@ def create_task(task_data: TaskCreate):
             content={"error": "Title cannot be empty"}
         )
 
-    new_id = max(task["id"] for task in tasks) + 1
+    conn = get_connection()
+    cursor = conn.execute(
+        "INSERT INTO tasks (title, done) VALUES (?, ?)",
+        (title, 0)
+    )
+    conn.commit()
+    new_id = cursor.lastrowid
+    conn.close()
 
-    new_task = {
-        "id": new_id,
-        "title": title,
-        "done": False
-    }
-
-    tasks.append(new_task)
-
-    return new_task
+    return {"id": new_id, "title": title, "done": False}
 
 @app.put("/tasks/{task_id}")
 def update_task(task_id: int, task_data: TaskUpdate, description="Updates the title and/or completion status of a task."):
