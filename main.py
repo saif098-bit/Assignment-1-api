@@ -57,7 +57,7 @@ def get_tasks():
 @app.get("/tasks/{task_id}", description="Returns a specific task by its ID.")
 def get_task(task_id: int):
     conn = get_connection()
-    row = conn.execute("SELECT * FROM tasks WHERE id = ?", (task_id,)).fetchone()
+    row = conn.execute("SELECT * FROM tasks WHERE id = %s", (task_id,)).fetchone()
     conn.close()
 
     if row is None:

@@ -88,3 +88,19 @@ default data directory layout):
 \`\`\`bash
 docker run --name taskdb -e POSTGRES_PASSWORD=dev -e POSTGRES_DB=tasks -p 5432:5432 -v taskdata:/var/lib/postgresql/data -d postgres:16
 \`\`\`
+
+### Stage 1 — Connect via .env and create table
+
+Swapped `db.py` from SQLite to Postgres using `psycopg`. Connection string lives in
+`.env` (git-ignored); `.env.example` is committed with the same keys and a placeholder
+value. The `tasks` table is created automatically on startup if missing, and seeded
+with 3 example tasks only if empty.
+
+Note: had to stop a native PostgreSQL 18 Windows service that was also listening on
+port 5432 and conflicting with the Docker container.
+
+### Stage 2 — Read from Postgres
+
+`GET /tasks` and `GET /tasks/{id}` now query Postgres via `psycopg`, using `%s`
+parameterized placeholders instead of SQLite's `?`. Unknown ids still return 404
+with a JSON error body.
