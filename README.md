@@ -111,3 +111,13 @@ with a JSON error body.
 parameterized queries. `POST` uses `INSERT ... RETURNING *` to get the new row
 (including its Postgres-generated id) back in one query. Full CRUD cycle verified:
 create → 201, update → 200, delete → 204, unknown id → 404.
+
+### Stage 4 — One command for the whole stack
+
+Wrote a `Dockerfile` for the app and a `compose.yaml` with two services: `api` and
+`db`. Inside the compose network, the app reaches Postgres at hostname `db` (the
+service name), not `localhost`. Added a `healthcheck` on `db` using `pg_isready`,
+with `api`'s `depends_on` set to `condition: service_healthy` — without this, the
+app container started before Postgres finished initializing and crashed with
+"Connection refused". `docker compose up` now brings up the whole stack with one
+command, and data survives `docker compose down` + `up` thanks to the named volume.
