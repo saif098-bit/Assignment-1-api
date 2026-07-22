@@ -104,3 +104,10 @@ port 5432 and conflicting with the Docker container.
 `GET /tasks` and `GET /tasks/{id}` now query Postgres via `psycopg`, using `%s`
 parameterized placeholders instead of SQLite's `?`. Unknown ids still return 404
 with a JSON error body.
+
+### Stage 3 — Create, update, delete on Postgres
+
+`POST`, `PUT`, and `DELETE /tasks/{id}` now run against Postgres with `%s`
+parameterized queries. `POST` uses `INSERT ... RETURNING *` to get the new row
+(including its Postgres-generated id) back in one query. Full CRUD cycle verified:
+create → 201, update → 200, delete → 204, unknown id → 404.

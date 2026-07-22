@@ -80,20 +80,20 @@ def create_task(task_data: TaskCreate):
         )
 
     conn = get_connection()
-    cursor = conn.execute(
-        "INSERT INTO tasks (title, done) VALUES (?, ?)",
-        (title, 0)
-    )
+    row = conn.execute(
+        "INSERT INTO tasks (title, done) VALUES (%s, %s) RETURNING *",
+        (title, False)
+    ).fetchone()
     conn.commit()
-    new_id = cursor.lastrowid
     conn.close()
 
-    return {"id": new_id, "title": title, "done": False}
+    return row_to_task(row)
+
 
 @app.put("/tasks/{task_id}", description="Updates the title and/or completion status of a task.")
 def update_task(task_id: int, task_data: TaskUpdate):
     conn = get_connection()
-    row = conn.execute("SELECT * FROM tasks WHERE id = ?", (task_id,)).fetchone()
+    row = conn.execute("SELECT * FROM tasks WHERE id = %s", (task_id,)).fetchone()
 
     if row is None:
         conn.close()
@@ -121,11 +121,11 @@ def update_task(task_id: int, task_data: TaskUpdate):
             )
         new_title = update_data["title"].strip()
 
-    new_done = update_data.get("done", bool(row["done"]))
+    new_done = update_data.get("done", row["done"])
 
     conn.execute(
-        "UPDATE tasks SET title = ?, done = ? WHERE id = ?",
-        (new_title, int(new_done), task_id)
+        "UPDATE tasks SET title = %s, done = %s WHERE id = %s",
+        (new_title, new_done, task_id)
     )
     conn.commit()
     conn.close()
@@ -136,7 +136,7 @@ def update_task(task_id: int, task_data: TaskUpdate):
 @app.delete("/tasks/{task_id}", status_code=204, description="Deletes a task permanently.")
 def delete_task(task_id: int):
     conn = get_connection()
-    row = conn.execute("SELECT * FROM tasks WHERE id = ?", (task_id,)).fetchone()
+    row = conn.execute("SELECT * FROM tasks WHERE id = %s", (task_id,)).fetchone()
 
     if row is None:
         conn.close()
@@ -145,6 +145,6 @@ def delete_task(task_id: int):
             content={"error": f"Task {task_id} not found"}
         )
 
-    conn.execute("DELETE FROM tasks WHERE id = ?", (task_id,))
+    conn.execute("DELETE FROM tasks WHERE id = %s", (task_id,))
     conn.commit()
     conn.close()
