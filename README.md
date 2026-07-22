@@ -121,3 +121,40 @@ with `api`'s `depends_on` set to `condition: service_healthy` — without this, 
 app container started before Postgres finished initializing and crashed with
 "Connection refused". `docker compose up` now brings up the whole stack with one
 command, and data survives `docker compose down` + `up` thanks to the named volume.
+
+## Endpoints
+
+| Method | Path         | Description         |
+|--------|--------------|----------------------|
+| GET    | /            | API info             |
+| GET    | /health      | Health check         |
+| GET    | /tasks       | List all tasks       |
+| GET    | /tasks/{id}  | Get a single task    |
+| POST   | /tasks       | Create a task        |
+| PUT    | /tasks/{id}  | Update a task        |
+| DELETE | /tasks/{id}  | Delete a task        |
+
+## Example request
+
+```
+curl.exe -i http://localhost:8000/tasks
+```
+
+## How to run (Docker)
+
+```bash
+git clone https://github.com/saif098-bit/Assignment-1-api
+cd Assignment-1-api
+cp .env.example .env
+docker compose up
+```
+
+The API will be available at http://localhost:8000. Postgres data persists in a
+Docker volume across restarts — `docker compose down` followed by `docker compose up`
+will not lose your data.
+
+## Database (Postgres)
+
+Screenshot of the `tasks` table and its rows via `psql` inside the container:
+
+![Postgres tasks table](postgres-screenshot.png)
