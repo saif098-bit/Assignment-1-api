@@ -1,3 +1,4 @@
+## Assignment 2 — SQLite
 # Task API
 
 A simple CRUD API built with Python and FastAPI.
@@ -77,3 +78,13 @@ This marked every task as done, then deleted every task — clearing the table c
 `GET /tasks` immediately afterward (no server restart) returned `[]`, proving my API and DB Browser
 read the exact same file with no syncing involved. Restarting the server then reseeded the table,
 confirming the seed logic only runs when the table is truly empty.
+
+## Assignment 3 — Containerize your stack
+## Stage 0 — Postgres in Docker
+
+Started a Postgres 16 container (16 used instead of latest/18, since 18 changed its
+default data directory layout):
+
+\`\`\`bash
+docker run --name taskdb -e POSTGRES_PASSWORD=dev -e POSTGRES_DB=tasks -p 5432:5432 -v taskdata:/var/lib/postgresql/data -d postgres:16
+\`\`\`
